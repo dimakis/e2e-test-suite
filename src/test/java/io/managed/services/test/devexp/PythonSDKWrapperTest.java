@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
@@ -40,6 +41,8 @@ public class PythonSDKWrapperTest {
     private static final Logger LOGGER = LogManager.getLogger(KafkaCLITest.class);
 
     private static final String KAFKA_INSTANCE_NAME = "sdk-e2e-test-instance-" + Environment.LAUNCH_KEY;
+
+    private static final String SERVICE_ACCOUNT_NAME = "sdk-e2e-service-account-" + Environment.LAUNCH_KEY;
 
     private PythonSDKWrapper pythonSDK;
 
@@ -88,5 +91,39 @@ public class PythonSDKWrapperTest {
         pythonSDK.deleteKafka(kafka.getId());
 
         SDKUtils.waitUntilKafkaIsDeleted(pythonSDK, kafka.getId());
+    }
+
+
+    @SneakyThrows
+    public void testCreateServiceAccount() {
+        LOGGER.info("creating service account with name: {}", SERVICE_ACCOUNT_NAME);
+        var serviceAccount = pythonSDK.createServiceAccount(SERVICE_ACCOUNT_NAME);
+
+        var exists = Arrays.stream(pythonSDK.listServiceAccounts())
+                .filter(sa -> SERVICE_ACCOUNT_NAME.equals(sa.getName()))
+                .findAny();
+        assertTrue(exists.isPresent());
+    }
+
+    @SneakyThrows
+    public void testGetServiceAccounts() {
+        LOGGER.info("getting service accounts");
+        var serviceAccounts = pythonSDK.listServiceAccounts();
+
+        var exists = Arrays.stream(serviceAccounts)
+                .filter(sa -> SERVICE_ACCOUNT_NAME.equals(sa.getName()))
+                .findAny();
+        assertTrue(exists.isPresent());
+    }
+
+    @SneakyThrows
+    public void testDeleteServiceAccount() {
+        LOGGER.info("deleting service account with name: {}", SERVICE_ACCOUNT_NAME);
+        pythonSDK.deleteServiceAccount(SERVICE_ACCOUNT_NAME);
+
+        var exists = Arrays.stream(pythonSDK.listServiceAccounts())
+                .filter(sa -> SERVICE_ACCOUNT_NAME.equals(sa.getName()))
+                .findAny();
+        assertTrue(exists.isEmpty());
     }
 }

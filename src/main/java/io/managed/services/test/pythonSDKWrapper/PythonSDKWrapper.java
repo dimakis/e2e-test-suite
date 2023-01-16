@@ -2,6 +2,7 @@ package io.managed.services.test.pythonSDKWrapper;
 
 import com.openshift.cloud.api.kas.models.KafkaRequest;
 import com.openshift.cloud.api.kas.models.KafkaRequestList;
+import com.openshift.cloud.api.serviceaccounts.models.ServiceAccountData;
 import io.managed.services.test.RetryUtils;
 import io.managed.services.test.ThrowingSupplier;
 import io.managed.services.test.cli.AsyncProcess;
@@ -117,6 +118,25 @@ public class PythonSDKWrapper {
                 .asJson(KafkaRequestList.class);
     }
 
+
+    public ServiceAccountData createServiceAccount(String name) throws CliGenericException {
+        return retry(() -> exec(pythonSDKPath + "serviceaccount/create_service_account.py", "--service_account_name", name, "--service_account_description", "this is a description"))
+                .asJson(ServiceAccountData.class);
+    }
+
+    public ServiceAccountData describeServiceAccount(String id) throws CliGenericException {
+        return retry(() -> exec("service-account", "describe", "--id", id))
+                .asJson(ServiceAccountData.class);
+    }
+
+    public ServiceAccountData[] listServiceAccounts() throws CliGenericException {
+        return retry(() -> exec(pythonSDKPath + "serviceaccount/get_service_accounts.py"))
+                .asJson(ServiceAccountData[].class);
+    }
+
+    public void deleteServiceAccount(String id) throws CliGenericException {
+        retry(() -> exec(pythonSDKPath + "serviceaccount/delete_service_account.py", "--service_account_id", id));
+    }
 
     private <T, E extends Throwable> T retry(ThrowingSupplier<T, E> call) throws E {
         return RetryUtils.retry(1, call, PythonSDKWrapper::retryCondition);
